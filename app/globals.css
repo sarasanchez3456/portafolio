@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  /* Burgundy palette */
+  --burgundy-dark: #6B0F1A;
+  --burgundy-medium: #7A0E1E;
+  --burgundy-red: #8C1C2C;
+  --rosado-light: #F5E6E6;
+  --rosado-pastel: #EFD1D1;
+  --white: #FFFFFF;
+  --white-off: #FAFAFA;
+  --gray-dark: #333333;
+  --gray-medium: #666666;
+
+  --background: var(--rosado-light);
+  --foreground: var(--burgundy-dark);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-burgundy-dark: var(--burgundy-dark);
+  --color-burgundy-medium: var(--burgundy-medium);
+  --color-burgundy-red: var(--burgundy-red);
+  --color-rosado-light: var(--rosado-light);
+  --color-rosado-pastel: var(--rosado-pastel);
+  --color-white: var(--white);
+  --color-white-off: var(--white-off);
+  --color-gray-dark: var(--gray-dark);
+  --color-gray-medium: var(--gray-medium);
+
+  --shadow-soft: 0 20px 40px rgba(122,14,30,0.15);
+
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--burgundy-dark);
+    --foreground: var(--white);
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
