@@ -36,8 +36,9 @@ export async function sendEmailAction(formData: {
   const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || process.env.EMAILJS_SERVICE_ID;
   const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || process.env.EMAILJS_TEMPLATE_ID;
   const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || process.env.EMAILJS_PUBLIC_KEY;
+  const privateKey = process.env.EMAILJS_PRIVATE_KEY;
 
-  if (!serviceId || !templateId || !publicKey) {
+  if (!serviceId || !templateId || !publicKey || !privateKey) {
     console.error("Faltan credenciales de EmailJS");
     return { success: false, error: "Configuración del servidor incompleta" };
   }
@@ -53,6 +54,7 @@ export async function sendEmailAction(formData: {
         service_id: serviceId,
         template_id: templateId,
         user_id: publicKey,
+        accessToken: privateKey,
         template_params: {
           name: formData.name,
           email: formData.email,
@@ -64,7 +66,9 @@ export async function sendEmailAction(formData: {
     });
 
     if (!response.ok) {
-      throw new Error(`EmailJS respondió con status: ${response.status}`);
+      const text = await response.text();
+      console.error(`EmailJS API Error: ${response.status} - ${text}`);
+      throw new Error(`EmailJS respondió con status: ${response.status} - ${text}`);
     }
 
     // Guardar en el rate limit
