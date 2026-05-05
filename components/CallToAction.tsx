@@ -1,14 +1,9 @@
-﻿"use client";
+"use client";
 
 import { motion } from "framer-motion";
 import { Send, Mail, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
-import emailjs from "@emailjs/browser";
-
-// ✅ Variables de entorno — define estas en .env.local (nunca las subas a git)
-const EMAILJS_PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY ?? "";
-const EMAILJS_SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID ?? "";
-const EMAILJS_TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID ?? "";
+import { sendEmailAction } from "../app/actions/sendEmail";
 
 // ✅ Email ofuscado: se construye en runtime para dificultar harvesting por bots
 const CONTACT_EMAIL = ["saritasanche404", "gmail.com"].join("@");
@@ -21,38 +16,54 @@ export default function CallToAction() {
   });
 
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [honeypot, setHoneypot] = useState("");
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
-  // ✅ Inicializar EmailJS con variable de entorno
+  // Verificar si el usuario ya envió un mensaje recientemente (hace menos de 24h)
   useEffect(() => {
-    emailjs.init(EMAILJS_PUBLIC_KEY);
+    const lastSubmission = localStorage.getItem("lastContactSubmission");
+    if (lastSubmission) {
+      const timeSince = Date.now() - parseInt(lastSubmission, 10);
+      const hoursSince = timeSince / (1000 * 60 * 60);
+      if (hoursSince < 24) {
+        setHasSubmitted(true);
+      }
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // ✅ Honeypot verificado en el cliente y servidor
+    if (honeypot) return;
+    
+    if (hasSubmitted) {
+      setStatus("success");
+      return;
+    }
+
     setStatus("sending");
 
     try {
-      await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        {
-          name: formData.name,
-          email: formData.email,
-          message: formData.message,
-          title: "Mensaje desde portafolio",
-          date: new Date().toLocaleString(),
-        },
-        EMAILJS_PUBLIC_KEY
-      );
+      // ✅ Llamada segura al Server Action
+      const result = await sendEmailAction({
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+        honeypot,
+      });
 
-      setStatus("success");
-      setFormData({ name: "", email: "", message: "" });
-
-    } catch (error: unknown) {
-      // ✅ Solo loggear en desarrollo, nunca exponer el objeto completo
-      if (process.env.NODE_ENV === "development") {
-        console.warn("EmailJS error:", (error as { status?: number })?.status);
+      if (result.success) {
+        setStatus("success");
+        setHasSubmitted(true);
+        localStorage.setItem("lastContactSubmission", Date.now().toString());
+        setFormData({ name: "", email: "", message: "" });
+      } else {
+        console.error(result.error);
+        setStatus("error");
       }
+    } catch (error) {
+      console.error("Error inesperado:", error);
       setStatus("error");
     }
   };
@@ -145,6 +156,16 @@ export default function CallToAction() {
             transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
           >
             <form onSubmit={handleSubmit} className="bg-rosado-light p-8 rounded-3xl shadow-soft">
+              {/* ✅ Honeypot: invisible para humanos, los bots lo llenan y se bloquean */}
+              <input
+                type="text"
+                name="website"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                style={{ display: "none" }}
+                tabIndex={-1}
+                autoComplete="off"
+              />
               <div className="space-y-6">
                 <div>
                   <label htmlFor="cta-name" className="block text-burgundy-dark font-semibold mb-2">
@@ -157,6 +178,7 @@ export default function CallToAction() {
                     value={formData.name}
                     onChange={handleChange}
                     required
+                    maxLength={100}
                     className="w-full px-4 py-3 bg-white border-2 border-rosado-pastel rounded-xl focus:border-burgundy-red focus:outline-none transition-colors text-gray-dark"
                     placeholder="Tu nombre completo"
                   />
@@ -173,6 +195,7 @@ export default function CallToAction() {
                     value={formData.email}
                     onChange={handleChange}
                     required
+                    maxLength={150}
                     className="w-full px-4 py-3 bg-white border-2 border-rosado-pastel rounded-xl focus:border-burgundy-red focus:outline-none transition-colors text-gray-dark"
                     placeholder="tu@email.com"
                   />
@@ -188,6 +211,7 @@ export default function CallToAction() {
                     value={formData.message}
                     onChange={handleChange}
                     required
+                    maxLength={1500}
                     rows={5}
                     className="w-full px-4 py-3 bg-white border-2 border-rosado-pastel rounded-xl focus:border-burgundy-red focus:outline-none transition-colors resize-none text-gray-dark"
                     placeholder="Cuéntame sobre tu proyecto..."
@@ -216,12 +240,12 @@ export default function CallToAction() {
 
                 <motion.button
                   type="submit"
-                  disabled={status === "sending"}
+                  disabled={status === "sending" || hasSubmitted}
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   className="w-full px-8 py-4 bg-burgundy-dark text-white font-semibold rounded-full hover:bg-burgundy-red transition-colors flex items-center justify-center gap-2 shadow-soft disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {status === "sending" ? "Enviando..." : "Enviar Mensaje"}
+                  {status === "sending" ? "Enviando..." : hasSubmitted ? "Mensaje Enviado" : "Enviar Mensaje"}
                   <Send size={20} />
                 </motion.button>
               </div>

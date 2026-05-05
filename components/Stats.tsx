@@ -2,17 +2,39 @@
 
 import { motion } from "framer-motion";
 import { Calendar, FolderOpen, Coffee, Heart } from "lucide-react";
-
-const stats = [
-  { icon: Calendar, value: "1 año", label: "de estudio" },
-  { icon: FolderOpen, value: "+5", label: "proyectos" },
-  { icon: Coffee, value: "+1000", label: "tazas de café" },
-  { icon: Heart, value: "100%", label: "pasión" },
-];
+import { useState, useEffect } from "react";
 
 export default function Stats() {
+  const [reposCount, setReposCount] = useState<number | string>("+5");
+
+  useEffect(() => {
+    async function fetchGitHubStats() {
+      try {
+        const res = await fetch("https://api.github.com/users/sarasanchez3456");
+        if (res.ok) {
+          const data = await res.json();
+          // Solo actualizamos si nos devuelve un número válido
+          if (data.public_repos !== undefined) {
+            setReposCount(data.public_repos);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching GitHub stats", error);
+      }
+    }
+    
+    fetchGitHubStats();
+  }, []);
+
+  const stats = [
+    { icon: Calendar, value: "1 año", label: "de estudio" },
+    { icon: FolderOpen, value: reposCount.toString(), label: "repositorios (Live)" },
+    { icon: Coffee, value: "+1000", label: "tazas de café" },
+    { icon: Heart, value: "100%", label: "pasión" },
+  ];
+
   return (
-    <section className="py-28 px-20 -mt-8 relative z-10">
+    <section className="py-28 px-6 md:px-20 -mt-8 relative z-10">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -46,4 +68,3 @@ export default function Stats() {
     </section>
   );
 }
-

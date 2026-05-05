@@ -125,6 +125,7 @@ export default function Hero() {
                 href="https://github.com/sarasanchez3456"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Ir a mi GitHub"
                 whileHover={{ scale: 1.2, y: -3 }}
                 className="p-3 bg-burgundy-dark text-white rounded-full hover:bg-burgundy-red transition-colors"
               >
@@ -134,6 +135,7 @@ export default function Hero() {
                 href="https://www.linkedin.com/in/sara-sanchez-775a1a3ab/"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Ir a mi LinkedIn"
                 whileHover={{ scale: 1.2, y: -3 }}
                 className="p-3 bg-burgundy-dark text-white rounded-full hover:bg-burgundy-red transition-colors"
               >

@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import { motion } from "framer-motion";
 import { GitBranch } from "lucide-react";
+import Image from "next/image";
 
 // ✅ Imágenes locales en /public/projects/
 // Para migrar: descarga cada imagen de Pinterest y guárdala en public/projects/
@@ -80,16 +81,19 @@ export default function Projects() {
               style={{ boxShadow: "var(--shadow-soft)" }}
             >
               <div className="relative overflow-hidden h-48">
-                <img
+                <Image
                   src={project.image}
                   alt={project.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-burgundy-dark/0 group-hover:bg-burgundy-dark/80 transition-all duration-300 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100">
                   <motion.a
                     href={project.github}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label={`Ver código fuente de ${project.title} en GitHub`}
                     whileHover={{ scale: 1.2, rotate: 5 }}
                     className="p-3 bg-white text-burgundy-dark rounded-full"
                   >
